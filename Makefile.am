@@ -142,6 +142,7 @@ openvpn_SOURCES = \
 	syshead.h \
 	tun.c tun.h \
 	win32.h win32.c \
+	unixseqpack.h unixseqpack.c \
 	cryptoapi.h cryptoapi.c
 
 nodist_openvpn_SOURCES = configure.h

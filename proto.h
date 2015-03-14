@@ -38,6 +38,8 @@
 #define DEV_TYPE_TUN   2    /* point-to-point IP tunnel */
 #define DEV_TYPE_TAP   3    /* ethernet (802.3) tunnel */
 
+#define DEV_TYPE_SOCK  101    /* just send packets to AF_UNIX SOCK_SEQPACKET socket */
+
 /* TUN topologies */
 
 #define TOP_UNDEF   0

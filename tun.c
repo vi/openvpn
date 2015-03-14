@@ -42,6 +42,7 @@
 #include "win32.h"
 
 #include "memdbg.h"
+#include "unixseqpack.h"
 
 #ifdef WIN32
 
@@ -87,6 +88,8 @@ dev_type_enum (const char *dev, const char *dev_type)
     return DEV_TYPE_TAP;
   else if (is_dev_type (dev, dev_type, "null"))
     return DEV_TYPE_NULL;
+  else if (is_dev_type (dev, dev_type, "sock"))
+    return DEV_TYPE_SOCK;
   else
     return DEV_TYPE_UNDEF;
 }
@@ -102,6 +105,8 @@ dev_type_string (const char *dev, const char *dev_type)
       return "tap";
     case DEV_TYPE_NULL:
       return "null";
+    case DEV_TYPE_SOCK:
+      return "sock";
     default:
       return "[unknown-dev-type]";
     }
@@ -988,6 +993,22 @@ open_null (struct tuntap *tt)
   tt->actual_name = string_alloc ("null", NULL);
 }
 
+static void
+open_sock (struct tuntap *tt)
+{
+  tt->actual_name = string_alloc ("sock", NULL);
+
+  const char* c = getenv("C");
+  const char* l = getenv("L");
+
+  if (!c && l) {
+    tt->fd = get_connected_unix_socket(l, LISTEN_AND_ACCEPT);
+  }
+  if (c && !l) {
+    tt->fd = get_connected_unix_socket(c, CONNECT);
+  }
+}
+
 #ifndef WIN32
 static void
 open_tun_generic (const char *dev, const char *dev_type, const char *dev_node,
@@ -1003,6 +1024,10 @@ open_tun_generic (const char *dev, const char *dev_type, const char *dev_node,
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+    }
+  else if (tt->type == DEV_TYPE_SOCK) 
+    {
+      open_sock (tt);
     }
   else
     {
@@ -1111,6 +1136,10 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+    }
+  else if (tt->type = DEV_TYPE_SOCK)
+    {
+      open_sock (tt);
     }
   else
     {
@@ -1286,7 +1315,7 @@ close_tun (struct tuntap *tt)
 {
   if (tt)
     {
-	if (tt->type != DEV_TYPE_NULL && tt->did_ifconfig)
+	if (tt->type != DEV_TYPE_NULL && tt->type != DEV_TYPE_SOCK && tt->did_ifconfig)
 	  {
 	    struct argv argv;
 	    struct gc_arena gc = gc_new ();
@@ -1412,6 +1441,11 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+      return;
+    }
+  if (tt->type == DEV_TYPE_SOCK)
+    {
+      open_sock (tt);
       return;
     }
 
@@ -3983,6 +4017,12 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+      gc_free (&gc);
+      return;
+    }
+  else if (tt->type == DEV_TYPE_SOCK)
+    {
+      open_sock (tt);
       gc_free (&gc);
       return;
     }
