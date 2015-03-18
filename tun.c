@@ -996,7 +996,7 @@ static void
 open_stdout (struct tuntap *tt)
 {
   tt->actual_name = string_alloc ("stdout", NULL);
-  tt->fd = 1;
+  tt->fd = 0;
 }
 
 #ifndef WIN32
