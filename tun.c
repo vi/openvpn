@@ -87,6 +87,8 @@ dev_type_enum (const char *dev, const char *dev_type)
     return DEV_TYPE_TAP;
   else if (is_dev_type (dev, dev_type, "null"))
     return DEV_TYPE_NULL;
+  else if (is_dev_type (dev, dev_type, "stdout"))
+    return DEV_TYPE_STDOUT;
   else
     return DEV_TYPE_UNDEF;
 }
@@ -102,6 +104,8 @@ dev_type_string (const char *dev, const char *dev_type)
       return "tap";
     case DEV_TYPE_NULL:
       return "null";
+    case DEV_TYPE_STDOUT:
+      return "stdout";
     default:
       return "[unknown-dev-type]";
     }
@@ -988,6 +992,13 @@ open_null (struct tuntap *tt)
   tt->actual_name = string_alloc ("null", NULL);
 }
 
+static void
+open_stdout (struct tuntap *tt)
+{
+  tt->actual_name = string_alloc ("stdout", NULL);
+  tt->fd = 1;
+}
+
 #ifndef WIN32
 static void
 open_tun_generic (const char *dev, const char *dev_type, const char *dev_node,
@@ -1003,6 +1014,10 @@ open_tun_generic (const char *dev, const char *dev_type, const char *dev_node,
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+    }
+  else if (tt->type == DEV_TYPE_STDOUT)
+    {
+      open_stdout (tt);
     }
   else
     {
@@ -1111,6 +1126,10 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+    }
+  else if (tt->type == DEV_TYPE_STDOUT)
+    {
+      open_stdout (tt);
     }
   else
     {
@@ -1286,7 +1305,7 @@ close_tun (struct tuntap *tt)
 {
   if (tt)
     {
-	if (tt->type != DEV_TYPE_NULL && tt->did_ifconfig)
+	if (tt->type != DEV_TYPE_NULL && tt->type != DEV_TYPE_STDOUT && tt->did_ifconfig)
 	  {
 	    struct argv argv;
 	    struct gc_arena gc = gc_new ();
@@ -1412,6 +1431,12 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+      return;
+    }
+
+  if (tt->type == DEV_TYPE_STDOUT)
+    {
+      open_stdout (tt);
       return;
     }
 
@@ -3983,6 +4008,12 @@ open_tun (const char *dev, const char *dev_type, const char *dev_node, bool ipv6
   if (tt->type == DEV_TYPE_NULL)
     {
       open_null (tt);
+      gc_free (&gc);
+      return;
+    }
+  else if (tt->type == DEV_TYPE_STDOUT)
+    {
+      open_stdout (tt);
       gc_free (&gc);
       return;
     }

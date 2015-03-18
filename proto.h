@@ -37,6 +37,7 @@
 #define DEV_TYPE_NULL  1
 #define DEV_TYPE_TUN   2    /* point-to-point IP tunnel */
 #define DEV_TYPE_TAP   3    /* ethernet (802.3) tunnel */
+#define DEV_TYPE_STDOUT   100    /* recv and send to stdout (1'th fd) */
 
 /* TUN topologies */
 
